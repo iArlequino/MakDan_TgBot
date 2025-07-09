@@ -12,5 +12,9 @@ mvnw
 *.zip
 *.tar.gz
 *.rar
+.idea
+target
+.gitattributes
+HELP.md
 hs_err_pid*
 replay_pid*
