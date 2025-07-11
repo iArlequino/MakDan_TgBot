@@ -19,8 +19,6 @@ public class Client {
 
     @Column(nullable = false, length = 20)
     private String phoneNumber;
-
-    // геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getExternalId() { return externalId; }
