@@ -1,0 +1,128 @@
+categories:
+  - name: "Пицца"
+    products:
+      - name: "Пицца Маргарита"
+        description: "Классическая пицца с томатами и сыром"
+        price: 350
+      - name: "Пицца Пепперони"
+        description: "Острая пицца с колбасой пепперони"
+        price: 400
+      - name: "Пицца Четыре сыра"
+        description: "Пицца с четырьмя видами сыра"
+        price: 420
+  - name: "Роллы"
+    subcategories:
+      - name: "Классические роллы"
+        products:
+          - name: "Ролл Калифорния"
+            description: "Классический ролл с крабом"
+            price: 250
+          - name: "Ролл Филадельфия"
+            description: "Ролл с лососем и сыром"
+            price: 270
+          - name: "Ролл Окинава"
+            description: "Ролл с угрём"
+            price: 290
+      - name: "Запеченные роллы"
+        products:
+          - name: "Запечённый ролл с креветкой"
+            description: "Ролл с креветкой и сыром"
+            price: 300
+          - name: "Запечённый ролл с курицей"
+            description: "Ролл с курицей и сыром"
+            price: 280
+          - name: "Запечённый ролл с овощами"
+            description: "Ролл с овощами"
+            price: 260
+      - name: "Сладкие роллы"
+        products:
+          - name: "Ролл с бананом"
+            description: "Сладкий ролл с бананом"
+            price: 200
+          - name: "Ролл с клубникой"
+            description: "Сладкий ролл с клубникой"
+            price: 210
+          - name: "Ролл с шоколадом"
+            description: "Сладкий ролл с шоколадом"
+            price: 220
+      - name: "Наборы"
+        products:
+          - name: "Набор Классика"
+            description: "Набор классических роллов"
+            price: 700
+          - name: "Набор Запечённые"
+            description: "Набор запечённых роллов"
+            price: 750
+          - name: "Набор Сладкие"
+            description: "Набор сладких роллов"
+            price: 650
+  - name: "Бургеры"
+    subcategories:
+      - name: "Классические бургеры"
+        products:
+          - name: "Бургер Классик"
+            description: "Классический бургер с говядиной"
+            price: 320
+          - name: "Бургер Чиз"
+            description: "Бургер с сыром"
+            price: 330
+          - name: "Бургер Двойной"
+            description: "Бургер с двойной котлетой"
+            price: 370
+      - name: "Острые бургеры"
+        products:
+          - name: "Бургер Огонь"
+            description: "Острый бургер с перцем"
+            price: 340
+          - name: "Бургер Мексиканский"
+            description: "Бургер с халапеньо"
+            price: 350
+          - name: "Бургер BBQ"
+            description: "Бургер с острым BBQ соусом"
+            price: 360
+  - name: "Напитки"
+    subcategories:
+      - name: "Газированные напитки"
+        products:
+          - name: "Кола"
+            description: "Газированный напиток"
+            price: 90
+          - name: "Спрайт"
+            description: "Газированный напиток"
+            price: 90
+          - name: "Фанта"
+            description: "Газированный напиток"
+            price: 90
+      - name: "Энергетические напитки"
+        products:
+          - name: "Red Bull"
+            description: "Энергетик"
+            price: 150
+          - name: "Burn"
+            description: "Энергетик"
+            price: 140
+          - name: "Adrenaline Rush"
+            description: "Энергетик"
+            price: 160
+      - name: "Соки"
+        products:
+          - name: "Апельсиновый сок"
+            description: "Свежевыжатый сок"
+            price: 120
+          - name: "Яблочный сок"
+            description: "Свежевыжатый сок"
+            price: 110
+          - name: "Вишнёвый сок"
+            description: "Свежевыжатый сок"
+            price: 130
+      - name: "Другие"
+        products:
+          - name: "Вода"
+            description: "Минеральная вода"
+            price: 70
+          - name: "Молочный коктейль"
+            description: "Коктейль"
+            price: 160
+          - name: "Компот"
+            description: "Домашний компот"
+            price: 80
