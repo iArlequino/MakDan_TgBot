@@ -1,10 +1,13 @@
 package ru.Daniil_Makarov.tgBot;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.Daniil_Makarov.tgBot.entity.*;
 import ru.Daniil_Makarov.tgBot.repository.*;
+
+import java.util.List;
 
 @SpringBootTest
 public class FillingTests {
@@ -14,6 +17,15 @@ public class FillingTests {
     
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ClientRepository clientRepository;
+
+    @Autowired
+    private ClientOrderRepository clientOrderRepository;
+
+    @Autowired
+    private OrderProductRepository orderProductRepository;
 
     @Test
     void fillData() {
@@ -81,12 +93,8 @@ public class FillingTests {
         long categoriesCount = categoryRepository.count();
         long productsCount = productRepository.count();
         
-        System.out.println("Сохранено категорий: " + categoriesCount);
-        System.out.println("Сохранено продуктов: " + productsCount);
-        
-        if (categoriesCount == 0 || productsCount == 0) {
-            throw new RuntimeException("Данные не были сохранены!");
-        }
+        Assertions.assertEquals(14, categoriesCount);
+        Assertions.assertEquals(33, productsCount);
     }
 
     private Category createCategory(String name, Category parent) {
@@ -103,6 +111,31 @@ public class FillingTests {
         product.setPrice(price);
         product.setCategory(category);
         return productRepository.save(product);
+    }
+
+    private Client createClient(Long externalId, String fullName, String phone, String address) {
+        Client client = new Client();
+        client.setExternalId(externalId);
+        client.setFullName(fullName);
+        client.setPhoneNumber(phone);
+        client.setAddress(address);
+        return clientRepository.save(client);
+    }
+
+    private ClientOrder createOrder(Client client, int status, double total) {
+        ClientOrder order = new ClientOrder();
+        order.setClient(client);
+        order.setStatus(status);
+        order.setTotal(total);
+        return clientOrderRepository.save(order);
+    }
+
+    private OrderProduct createOrderProduct(ClientOrder order, Product product, int count) {
+        OrderProduct op = new OrderProduct();
+        op.setClientOrder(order);
+        op.setProduct(product);
+        op.setCountProduct(count);
+        return orderProductRepository.save(op);
     }
 
     @Test
@@ -128,7 +161,35 @@ public class FillingTests {
     private void printCategory(Category category, String indent) {
         System.out.println(indent + "|- " + category.getName());
         categoryRepository.findAll().stream()
-                .filter(c -> category.equals(c.getParent()))
+                .filter(c -> c.getParent() != null && category.getId().equals(c.getParent().getId()))
                 .forEach(child -> printCategory(child, indent + "   "));
     }
+
+    @Test
+    void fillClientsAndOrders() {
+        Client client1 = createClient(1001L, "Иван Петров", "+79990001122", "ул. Ленина, 1");
+        Client client2 = createClient(1002L, "Роман Иванов", "+79990002233", "ул. Гагарина, 2");
+        Client client3 = createClient(1003L, "Мария Смирнова", "+79990003344", "ул. Победы, 3");
+
+        List<Product> products = productRepository.findAll();
+        Product pizza = products.stream().filter(p -> p.getName().contains("Маргарита")).findFirst().orElse(null);
+        Product roll = products.stream().filter(p -> p.getName().contains("Филадельфия")).findFirst().orElse(null);
+        Product burger = products.stream().filter(p -> p.getName().contains("Чизбургер")).findFirst().orElse(null);
+
+        ClientOrder order1 = createOrder(client1, 1, pizza.getPrice());
+        ClientOrder order2 = createOrder(client2, 1, roll.getPrice());
+        ClientOrder order3 = createOrder(client1, 2, pizza.getPrice() + burger.getPrice());
+        ClientOrder order4 = createOrder(client3, 1, burger.getPrice());
+
+        createOrderProduct(order1, pizza, 1);
+        createOrderProduct(order2, roll, 2);
+        createOrderProduct(order3, pizza, 1);
+        createOrderProduct(order3, burger, 1);
+        createOrderProduct(order4, burger, 2);
+
+        Assertions.assertEquals(3, clientRepository.count());
+        Assertions.assertEquals(4, clientOrderRepository.count());
+        Assertions.assertEquals(5, orderProductRepository.count());
+    }
 }
+
