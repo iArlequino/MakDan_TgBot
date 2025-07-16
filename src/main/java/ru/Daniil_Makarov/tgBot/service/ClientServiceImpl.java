@@ -42,4 +42,9 @@ public class ClientServiceImpl implements ClientService {
     public List<Client> searchByName(String name) {
         return clientRepository.findByFullNameContainingIgnoreCase(name);
     }
+
+    @Override
+    public Client findByExternalId(Long externalId) {
+        return clientRepository.findByExternalId(externalId);
+    }
 }

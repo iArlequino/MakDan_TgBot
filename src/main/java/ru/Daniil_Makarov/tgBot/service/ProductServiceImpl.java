@@ -3,6 +3,7 @@ package ru.Daniil_Makarov.tgBot.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.Daniil_Makarov.tgBot.entity.Product;
+import ru.Daniil_Makarov.tgBot.entity.Category;
 import ru.Daniil_Makarov.tgBot.repository.ProductRepository;
 import ru.Daniil_Makarov.tgBot.repository.OrderProductRepository;
 
@@ -22,8 +23,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> findByCategoryId(Long categoryId) {
+        // Для отладки: вывести все товары и их категории
+        productRepository.findAll().forEach(p -> {
+            System.out.println("Товар: " + p.getName() + ", категория: " + (p.getCategory() != null ? p.getCategory().getId() : "null"));
+        });
+
         return productRepository.findAll().stream()
-                .filter(p -> p.getCategory().getId().equals(categoryId))
+                .filter(p -> p.getCategory() != null && p.getCategory().getId().equals(categoryId))
                 .collect(Collectors.toList());
     }
 
@@ -52,5 +58,15 @@ public class ProductServiceImpl implements ProductService {
                 .limit(limit)
                 .map(e -> e.getKey())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Product findById(Long id) {
+        return productRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Product> findByCategory(Category category) {
+        return productRepository.findByCategory(category);
     }
 }

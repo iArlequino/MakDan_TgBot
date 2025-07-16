@@ -10,4 +10,5 @@ public interface ClientService {
     List<ClientOrder> getOrdersByClientId(Long clientId);
     List<Product> getProductsByClientId(Long clientId);
     List<Client> searchByName(String name);
+    Client findByExternalId(Long externalId);
 }
