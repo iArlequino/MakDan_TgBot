@@ -189,7 +189,7 @@ public class FillingTests {
 
         Assertions.assertEquals(3, clientRepository.count());
         Assertions.assertEquals(4, clientOrderRepository.count());
-        Assertions.assertEquals(6, orderProductRepository.count());
+        Assertions.assertEquals(5, orderProductRepository.count());
     }
 }
 
