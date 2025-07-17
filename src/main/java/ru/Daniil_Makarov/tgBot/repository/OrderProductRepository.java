@@ -13,4 +13,7 @@ import java.util.List;
 public interface OrderProductRepository extends JpaRepository<OrderProduct, Long> {
     @Query("SELECT DISTINCT op.product FROM OrderProduct op WHERE op.clientOrder IN :orders")
     List<Product> findDistinctProductsByClientOrderIn(List<ClientOrder> orders);
+
+    @Query("SELECT DISTINCT op.product FROM OrderProduct op WHERE op.clientOrder = :order")
+    List<Product> findDistinctProductsByClientOrder(ClientOrder order);
 }
