@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.Daniil_Makarov.tgBot.entity.Product;
 import ru.Daniil_Makarov.tgBot.entity.Category;
+import ru.Daniil_Makarov.tgBot.entity.ClientOrder;
 import ru.Daniil_Makarov.tgBot.repository.ProductRepository;
 import ru.Daniil_Makarov.tgBot.repository.OrderProductRepository;
 
@@ -15,38 +16,27 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final OrderProductRepository orderProductRepository;
+    private final ClientService clientService;
 
-    public ProductServiceImpl(ProductRepository productRepository, OrderProductRepository orderProductRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, OrderProductRepository orderProductRepository, ClientService clientService) {
         this.productRepository = productRepository;
         this.orderProductRepository = orderProductRepository;
+        this.clientService = clientService;
     }
 
     @Override
     public List<Product> findByCategoryId(Long categoryId) {
-        // Для отладки: вывести все товары и их категории
-        productRepository.findAll().forEach(p -> {
-            System.out.println("Товар: " + p.getName() + ", категория: " + (p.getCategory() != null ? p.getCategory().getId() : "null"));
-        });
-
-        return productRepository.findAll().stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().getId().equals(categoryId))
-                .collect(Collectors.toList());
+        return productRepository.findByCategoryId(categoryId);
     }
 
     @Override
     public List<Product> searchByName(String name) {
-        String lower = name.toLowerCase();
-        return productRepository.findAll().stream()
-                .filter(p -> p.getName().toLowerCase().contains(lower))
-                .collect(Collectors.toList());
+        return productRepository.findByNameContainingIgnoreCase(name);
     }
 
     @Override
     public List<Product> searchByNameAndCategory(String name, Long categoryId) {
-        String lower = name.toLowerCase();
-        return productRepository.findAll().stream()
-                .filter(p -> p.getName().toLowerCase().contains(lower) && p.getCategory().getId().equals(categoryId))
-                .collect(Collectors.toList());
+        return productRepository.findByNameContainingIgnoreCaseAndCategoryId(name, categoryId);
     }
 
     @Override
@@ -69,4 +59,34 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> findByCategory(Category category) {
         return productRepository.findByCategory(category);
     }
+
+    @Override
+    public Product addProductToCart(Long chatId, Long productId) {
+        Product product = findById(productId);
+        if (product == null) {
+            return null;
+        }
+        ClientOrder cart = clientService.getOrCreateCart(chatId);
+        clientService.addToCart(cart, product);
+        return product;
+    }
+
+    @Override
+    public String getCartText(Long chatId) {
+        ClientOrder cart = clientService.getOrCreateCart(chatId);
+        List<Product> products = clientService.getCartProducts(cart);
+
+        if (products.isEmpty()) {
+            return "Корзина пуста";
+        }
+
+        StringBuilder message = new StringBuilder("Ваш заказ:\n");
+        for (Product product : products) {
+            message.append(String.format("%s = %.2f руб.\n", product.getName(), product.getPrice()));
+        }
+        message.append(String.format("\nИтого: %.2f руб.", cart.getTotal()));
+        return message.toString();
+    }
 }
+
+

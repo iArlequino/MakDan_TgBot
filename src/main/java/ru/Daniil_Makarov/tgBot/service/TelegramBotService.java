@@ -8,25 +8,16 @@ import com.pengrad.telegrambot.request.SendMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.Daniil_Makarov.tgBot.entity.*;
-import ru.Daniil_Makarov.tgBot.repository.CategoryRepository;
-import ru.Daniil_Makarov.tgBot.repository.ClientRepository;
-import ru.Daniil_Makarov.tgBot.repository.ClientOrderRepository;
-import ru.Daniil_Makarov.tgBot.repository.OrderProductRepository;
 import jakarta.annotation.PostConstruct;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TelegramBotService {
     private final ProductService productService;
     private final ClientService clientService;
-    private final CategoryRepository categoryRepository;
-    private final ClientRepository clientRepository;
-    private final ClientOrderRepository clientOrderRepository;
-    private final OrderProductRepository orderProductRepository;
+    private final CategoryService categoryService;
     private TelegramBot bot;
-    private final Map<Long, List<Product>> currentOrders = new HashMap<>();
 
     @Value("${telegram.bot.token}")
     private String botToken;
@@ -34,16 +25,10 @@ public class TelegramBotService {
     public TelegramBotService(
             ProductService productService,
             ClientService clientService,
-            CategoryRepository categoryRepository,
-            ClientRepository clientRepository,
-            ClientOrderRepository clientOrderRepository,
-            OrderProductRepository orderProductRepository) {
+            CategoryService categoryService) {
         this.productService = productService;
         this.clientService = clientService;
-        this.categoryRepository = categoryRepository;
-        this.clientRepository = clientRepository;
-        this.clientOrderRepository = clientOrderRepository;
-        this.orderProductRepository = orderProductRepository;
+        this.categoryService = categoryService;
     }
 
     @PostConstruct
@@ -73,30 +58,28 @@ public class TelegramBotService {
         } else if (callbackData.startsWith("category:")) {
             long categoryId = Long.parseLong(callbackData.split(":")[1]);
             showCategoryProducts(chatId, categoryId);
+        } else if (callbackData.equals("back_to_categories")) {
+            sendCategoriesMenu(chatId);
         }
     }
 
     private void addProductToOrder(long chatId, long productId) {
-        Product product = productService.findById(productId);
+        Product product = productService.addProductToCart(chatId, productId);
         if (product == null) {
             bot.execute(new SendMessage(chatId, "Товар не найден"));
             return;
         }
-        List<Product> cart = currentOrders.computeIfAbsent(chatId, k -> new ArrayList<>());
-        cart.add(product);
         bot.execute(new SendMessage(chatId, "Товар " + product.getName() + " добавлен в корзину"));
     }
 
     private void showCategoryProducts(long chatId, long categoryId) {
-        Category category = categoryRepository.findById(categoryId).orElse(null);
+        Category category = categoryService.findById(categoryId);
         if (category == null) {
             bot.execute(new SendMessage(chatId, "Категория не найдена"));
             return;
         }
 
-        List<Category> subCategories = categoryRepository.findAll().stream()
-            .filter(c -> c.getParent() != null && c.getParent().getId().equals(categoryId))
-            .collect(Collectors.toList());
+        List<Category> subCategories = categoryService.findSubCategories(categoryId);
 
         if (!subCategories.isEmpty()) {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
@@ -166,10 +149,7 @@ public class TelegramBotService {
     }
 
     private void sendCategoriesMenu(long chatId) {
-        List<Category> categories = categoryRepository.findAll().stream()
-                .filter(c -> c.getParent() == null)
-                .collect(Collectors.toList());
-                
+        List<Category> categories = categoryService.findRootCategories();
         if (categories.isEmpty()) {
             bot.execute(new SendMessage(chatId, "Категории не найдены"));
             return;
@@ -186,56 +166,20 @@ public class TelegramBotService {
     }
 
     private void showCart(long chatId) {
-        List<Product> cart = currentOrders.get(chatId);
-        if (cart == null || cart.isEmpty()) {
-            bot.execute(new SendMessage(chatId, "Корзина пуста"));
-            return;
-        }
-        StringBuilder message = new StringBuilder("Ваш заказ:\n");
-        double total = 0;
-        for (Product product : cart) {
-            message.append(String.format("%s = %.2f руб.\n", product.getName(), product.getPrice()));
-            total += product.getPrice();
-        }
-        message.append(String.format("\nИтого: %.2f руб.", total));
-        bot.execute(new SendMessage(chatId, message.toString()));
+        String cartText = productService.getCartText(chatId);
+        bot.execute(new SendMessage(chatId, cartText));
     }
 
     private void createOrder(long chatId) {
-        List<Product> cart = currentOrders.get(chatId);
-        if (cart == null || cart.isEmpty()) {
+        ClientOrder cart = clientService.getOrCreateCart(chatId);
+        List<Product> products = clientService.getCartProducts(cart);
+        
+        if (products.isEmpty()) {
             bot.execute(new SendMessage(chatId, "Корзина пуста"));
             return;
         }
 
-        Client client = clientService.findByExternalId(chatId);
-        if (client == null) {
-            client = new Client();
-            client.setExternalId(chatId);
-            client.setFullName("User " + chatId); // Временное решение
-            client.setPhoneNumber("Unknown");
-            client.setAddress("Unknown");
-            client = clientRepository.save(client);
-        }
-
-        ClientOrder order = new ClientOrder();
-        order.setClient(client);
-        order.setStatus(1);
-        double total = cart.stream()
-            .mapToDouble(Product::getPrice)
-            .sum();
-        order.setTotal(total);
-        order = clientOrderRepository.save(order);
-
-        for (Product product : cart) {
-            OrderProduct orderProduct = new OrderProduct();
-            orderProduct.setClientOrder(order);
-            orderProduct.setProduct(product);
-            orderProduct.setCountProduct(1);
-            orderProductRepository.save(orderProduct);
-        }
-
-        currentOrders.remove(chatId);
+        clientService.submitOrder(cart);
         bot.execute(new SendMessage(chatId, "Заказ успешно оформлен!"));
     }
 
@@ -247,3 +191,6 @@ public class TelegramBotService {
         }
     }
 }
+
+
+

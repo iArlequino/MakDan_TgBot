@@ -11,4 +11,6 @@ public interface ProductService {
     List<Product> findPopularProducts(int limit);
     Product findById(Long id);
     List<Product> findByCategory(Category category);
+    Product addProductToCart(Long chatId, Long productId);
+    String getCartText(Long chatId);
 }
